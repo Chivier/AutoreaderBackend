@@ -4,6 +4,7 @@ import os
 import xml.etree.ElementTree as ET
 import requests
 from DailyOcr import ocr_folder
+from DailyVec import convert_embeddings
 import sys
 import argparse
 
@@ -11,7 +12,7 @@ RSS_URL = "https://rss.arxiv.org/rss/cs"
 
 
 class DailyArxiv:
-    def __init__(self, rss_url=RSS_URL, self_query_date=None, paper_dir=".", ocr_dir=".", metadata_dir="."):
+    def __init__(self, rss_url=RSS_URL, self_query_date=None, paper_dir="papers", ocr_dir="ocr", metadata_dir="metadata", index_dir="index"):
         self.rss_url = rss_url
         if self_query_date is None:
             self.query_date = datetime.datetime.today().strftime("%Y-%m-%d")
@@ -26,6 +27,8 @@ class DailyArxiv:
             os.makedirs(self.ocr_dir)
         if not os.path.exists(self.metadata_dir):
             os.makedirs(self.metadata_dir)
+        if not os.path.exists(index_dir):
+            os.makedirs(index_dir)
 
     def parse_rss(self, rss_url):
         response = requests.get(rss_url)
@@ -113,6 +116,14 @@ class DailyArxiv:
         ocr_dir = f"ocr_{date}"
         ocr_dir = os.path.join(self.ocr_dir, ocr_dir)
         ocr_folder(download_dir, ocr_dir)
+    
+    def index_papers(self):
+        date = self.query_date
+        ocr_dir = f"ocr_{date}"
+        ocr_dir = os.path.join(self.ocr_dir, ocr_dir)
+        index_dir = f"index_{date}"
+        index_dir = os.path.join(self.index_dir, index_dir)
+        convert_embeddings(ocr_dir, index_dir)
 
 def main():
     # parse arguments
@@ -122,6 +133,7 @@ def main():
     parser.add_argument("--paper_dir", default=".", help="Directory to store downloaded papers")
     parser.add_argument("--ocr_dir", default=".", help="Directory to store OCR results")
     parser.add_argument("--metadata_dir", default=".", help="Directory to store metadata")
+    parser.add_argument("--index_dir", default=".", help="Directory to store index")
 
     args = parser.parse_args()
     daily_arxiv = DailyArxiv(
@@ -129,12 +141,14 @@ def main():
         self_query_date=args.self_query_date,
         paper_dir=args.paper_dir,
         ocr_dir=args.ocr_dir,
-        metadata_dir=args.metadata_dir
+        metadata_dir=args.metadata_dir,
+        index_dir=args.index_dir
     )
     
     metadata = daily_arxiv.fetch_metadata()
     daily_arxiv.download_papers(metadata)
     daily_arxiv.ocr_papers()
+    daily_arxiv.index_papers()
     
 if __name__ == "__main__":
     # daily_arxiv = DailyArxiv(self_query_date="2024-05-31", paper_dir="data/papers", ocr_dir="data/ocr", metadata_dir="data/metadata")

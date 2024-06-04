@@ -61,9 +61,9 @@ def process_single_pdf(args):
         print(traceback.format_exc())
 
 
-def ocr_folder(in_folder, out_folder, chunk_idx=0, num_chunks=1, max=None, workers=10, metadata_file=None, min_length=None):
+def ocr_folder(in_folder, out_folder, chunk_idx=0, num_chunks=1, max=None, workers=8, metadata_file=None, min_length=None):
     # each worker will use around 2 GB of VRAM
-    
+
     in_folder = os.path.abspath(in_folder)
     out_folder = os.path.abspath(out_folder)
     files = [os.path.join(in_folder, f) for f in os.listdir(in_folder)]
@@ -88,13 +88,13 @@ def ocr_folder(in_folder, out_folder, chunk_idx=0, num_chunks=1, max=None, worke
             metadata = json.load(f)
 
     total_processes = min(len(files_to_convert), workers)
-    
+
     # Dynamically set GPU allocation per task based on GPU ram
     if settings.CUDA:
         tasks_per_gpu = settings.INFERENCE_RAM // settings.VRAM_PER_TASK if settings.CUDA else 0
         total_processes = min(int(tasks_per_gpu), int(total_processes))
 
-    mp.set_start_method('spawn') # Required for CUDA, forkserver doesn't work
+    mp.set_start_method('spawn', force=True) # Required for CUDA, forkserver doesn't work
     model_lst = load_all_models()
 
     for model in model_lst:
@@ -116,7 +116,7 @@ def ocr_folder(in_folder, out_folder, chunk_idx=0, num_chunks=1, max=None, worke
     # Delete all CUDA tensors
     del model_lst
 
-if __name__ == "__main__":
-    path1 = "papers_2024-05-31"
-    path2 = "md_2024-05-31"
-    ocr_folder(path1, path2)
+# if __name__ == "__main__":
+#     path1 = "papers_2024-05-31"
+#     path2 = "md_2024-05-31"
+#     ocr_folder(path1, path2)

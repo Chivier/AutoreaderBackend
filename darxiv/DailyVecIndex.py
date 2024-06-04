@@ -3,6 +3,7 @@ import csv
 import torch
 import json
 import numpy as np
+import openai
 
 def L2_distance(vector1, vector2):
     return np.linalg.norm(vector1 - vector2)
@@ -34,3 +35,10 @@ def read_source_from_key(source_path, key):
             if i == int(chunk_id):
                 return file_id, row[1]
             
+
+def generate_report(source_path, top_kv):
+    for key, sim in top_kv:
+        file_id, chunk_id = read_source_from_key(source_path, key)
+        
+
+        
