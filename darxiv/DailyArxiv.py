@@ -21,6 +21,7 @@ class DailyArxiv:
         self.metadata_dir = metadata_dir
         self.paper_dir = paper_dir
         self.ocr_dir = ocr_dir
+        self.index_dir = index_dir
         if not os.path.exists(self.paper_dir):
             os.makedirs(self.paper_dir)
         if not os.path.exists(self.ocr_dir):
@@ -148,7 +149,9 @@ def main():
     metadata = daily_arxiv.fetch_metadata()
     daily_arxiv.download_papers(metadata)
     daily_arxiv.ocr_papers()
+    print("ocr done")
     daily_arxiv.index_papers()
+    print("index done")
     
 if __name__ == "__main__":
     # daily_arxiv = DailyArxiv(self_query_date="2024-05-31", paper_dir="data/papers", ocr_dir="data/ocr", metadata_dir="data/metadata")
